@@ -4,12 +4,23 @@ const config = {
   client: 'mysql2',
   connection: {
     host: 'localhost',
-    user: 'new_user1', //newuser //new_user
+    user: 'mysqlUser', //newuser //new_user
     password: 'secure_password', //newpassword //new_password
-    database: 'newdatabase1',  //newdatabase //college 
+    database: 'attendance',  //newdatabase //college 
     timezone: 'Z' //utc
   }
 };
+
+// const config = {
+//   client: 'mysql2',
+//   connection: {
+//     host: 'localhost',
+//     user: 'newUser456', //newuser //new_user
+//     password: 'password_secure', //newpassword //new_password
+//     database: 'attendanceManagement',  //newdatabase //college 
+//     timezone: 'Z' //utc
+//   }
+// };
 
 // const config = {
 //   client: 'mysql2',

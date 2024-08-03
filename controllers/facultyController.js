@@ -496,8 +496,87 @@ export const getFacultyTeachingData = async (req, res) => {
 
 
 export const getParticularData = async (req, res) => {
+  // try {
+  //   const { sem, branch, batch, div, sub_id } = req.query; // Extract input parameters from the request body
+
+  //   console.log(sem, branch, batch, div, sub_id);
+
+  //   // Step 1: Retrieve the list of students based on the provided criteria
+  //   let studentsQuery = db('student_info')
+  //     .select('PRN', 'NAME')
+  //     .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div });
+
+  //   if (batch) {
+  //     // Filter by batch if provided
+  //     studentsQuery = studentsQuery.where({ BATCH: batch });
+  //   }
+
+  //   const students = await studentsQuery;
+
+  //   if (students.length === 0) {
+  //     return res.status(404).json({ message: 'No students found for the specified criteria' });
+  //   }
+
+  //   // Step 2: Retrieve the sem_id for the specified criteria
+  //   let infoTableQuery = db('sem_info')
+  //     .select('SEM_ID')
+  //     .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div, SUBJECT_ID: sub_id });
+
+  //   if (!batch) {
+  //     // If batch is not provided, include all batches in the query
+  //     infoTableQuery = db('sem_info')
+  //       .select('SEM_ID')
+  //       .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div, SUBJECT_ID: sub_id });
+  //   } else {
+  //     // If batch is provided, include it in the query
+  //     infoTableQuery = infoTableQuery.where({ BATCH: batch });
+  //   }
+
+  //   const infoTableResults = await infoTableQuery;
+
+  //   if (infoTableResults.length === 0) {
+  //     return res.status(404).json({ message: 'No sem_id found for the specified criteria' });
+  //   }
+
+  //   const semIds = infoTableResults.map(row => row.SEM_ID);
+
+  //   // Step 3: Retrieve attendance data based on the retrieved sem_id
+  //   const attendanceQuery = await db('attendance_table')
+  //     .select('DATE', 'STUDENTS')
+  //     .whereIn('SEM_ID', semIds);
+
+  //   if (attendanceQuery.length === 0) {
+  //     return res.status(404).json({ message: 'No attendance data found for the specified criteria' });
+  //   }
+
+  //   // Step 4: Correlate attendance data with the list of students
+  //   const attendanceData = students.map(student => {
+  //     const lectures = [];
+  //     const dates = [];
+
+  //     attendanceQuery.forEach(record => {
+  //       dates.push(record.DATE.toISOString().split('T')[0]); // Format date as 'yyyy-mm-dd'
+  //       lectures.push(record.STUDENTS.includes(student.PRN) ? 1 : 0);
+  //     });
+
+  //     return {
+  //       prn: student.PRN,
+  //       name: student.NAME,
+  //       lectures,
+  //       dates
+  //     };
+  //   });
+
+  //   // Step 5: Send the response back to the client
+  //   res.status(200).json({ attendanceData });
+
+  // } catch (error) {
+  //   console.error('Error fetching attendance data:', error);
+  //   res.status(500).send({ error: 'Internal Server Error' });
+  // }
+
   try {
-    const { sem, branch, batch, div, sub_id } = req.query; // Extract input parameters from the request body
+    const { sem, branch, batch, div, sub_id } = req.query; // Extract input parameters from the request query
 
     console.log(sem, branch, batch, div, sub_id);
 
@@ -522,12 +601,7 @@ export const getParticularData = async (req, res) => {
       .select('SEM_ID')
       .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div, SUBJECT_ID: sub_id });
 
-    if (!batch) {
-      // If batch is not provided, include all batches in the query
-      infoTableQuery = db('sem_info')
-        .select('SEM_ID')
-        .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div, SUBJECT_ID: sub_id });
-    } else {
+    if (batch) {
       // If batch is provided, include it in the query
       infoTableQuery = infoTableQuery.where({ BATCH: batch });
     }
@@ -542,8 +616,10 @@ export const getParticularData = async (req, res) => {
 
     // Step 3: Retrieve attendance data based on the retrieved sem_id
     const attendanceQuery = await db('attendance_table')
-      .select('DATE', 'STUDENTS')
-      .whereIn('SEM_ID', semIds);
+      .select('DATE', 'STUDENTS', 'SEM_ID') // Select only available columns
+      .whereIn('SEM_ID', semIds)
+      .andWhere('DATE', '<=', db.fn.now())
+      .orderBy('DATE', 'desc');
 
     if (attendanceQuery.length === 0) {
       return res.status(404).json({ message: 'No attendance data found for the specified criteria' });
@@ -818,11 +894,6 @@ export const updateAttendanceData = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 
 
