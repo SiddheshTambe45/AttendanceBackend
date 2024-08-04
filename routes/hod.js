@@ -1,22 +1,23 @@
 import express from 'express';
 import { getCriteria, fetchAttendanceData, getCriteriaFacSub, getSemestersAndDivisions, addStudents, saveTempSemInfo, getSubjectsAndFaculty, getFacultyByDepartment, allocateFacultyToSubject } from '../controllers/hodController.js';
+import { verifyJWT } from '../middleware/authenticate.js';
 
 const router = express.Router();
 
-router.get('/getCriteria',getCriteria);
-router.get('/fetchAttendanceData',fetchAttendanceData);
+router.get('/getCriteria',verifyJWT,getCriteria);
+router.get('/fetchAttendanceData',verifyJWT,fetchAttendanceData);
 
 
-router.get('/getCriteriaFacSub',getCriteriaFacSub);
+router.get('/getCriteriaFacSub',verifyJWT,getCriteriaFacSub);
 // router.get('/getFacultyDetailsByDepartment',getFacultyDetailsByDepartment);
 // router.post('/allocateFacultyAndAddSubjects',allocateFacultyAndAddSubjects);
-router.get('/getSubjectsAndFaculty',getSubjectsAndFaculty);
-router.get('/getFacultyByDepartment',getFacultyByDepartment);
-router.post('/allocateFacultyToSubject',allocateFacultyToSubject);
+router.get('/getSubjectsAndFaculty',verifyJWT,getSubjectsAndFaculty);
+router.get('/getFacultyByDepartment',verifyJWT,getFacultyByDepartment);
+router.post('/allocateFacultyToSubject',verifyJWT,allocateFacultyToSubject);
 
-router.get('/getSemestersAndDivisions',getSemestersAndDivisions);
-router.post('/addStudents',addStudents);
+router.get('/getSemestersAndDivisions',verifyJWT,getSemestersAndDivisions);
+router.post('/addStudents',verifyJWT,addStudents);
 
-router.post('/saveTempSemInfo',saveTempSemInfo);
+// router.post('/saveTempSemInfo',saveTempSemInfo);
 
 export default router;

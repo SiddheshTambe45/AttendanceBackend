@@ -1,60 +1,31 @@
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 
-dotenv.config();
+
+import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken';
 
 // Function to generate access and refresh tokens
 export const generateTokens = (userId) => {
   const accessToken = jwt.sign(
-    { userId },
+    { id: userId },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '1h' }
   );
 
   const refreshToken = jwt.sign(
-    { userId },
+    { id: userId },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '20d' }
   );
 
   return { accessToken, refreshToken };
 };
 
 // Function to verify access token
-export const verifyAccessToken = async (token) => {
-  try {
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(decoded);
-        }
-      });
-    });
-    return decoded;
-  } catch (err) {
-    throw new Error('Invalid or expired access token');
-  }
+export const verifyAccessToken = (token) => {
+    return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 };
 
-// Function to verify refresh token and generate new tokens
-export const regenerateTokens = async (refreshToken) => {
-  try {
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(decoded);
-        }
-      });
-    });
-
-    const { userId } = decoded;
-    const newTokens = generateTokens(userId);
-    return newTokens;
-  } catch (err) {
-    throw new Error('Invalid or expired refresh token');
-  }
+// Function to verify refresh token
+export const verifyRefreshToken = (token) => {
+  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
 };
