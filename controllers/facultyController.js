@@ -101,7 +101,7 @@ export const getFacultyTeachingData = async (req, res) => {
 };
 
 
-
+/*
 export const getParticularData = async (req, res) => {
   // try {
   //   const { sem, branch, batch, div, sub_id } = req.query; // Extract input parameters from the request body
@@ -238,7 +238,7 @@ export const getParticularData = async (req, res) => {
       const dates = [];
 
       attendanceQuery.forEach(record => {
-        dates.push(record.DATE.toISOString().split('T')[0]); // Format date as 'yyyy-mm-dd'
+        dates.push(record.DATE); //.toISOString().split('T')[0] // Format date as 'yyyy-mm-dd' 
         lectures.push(record.STUDENTS.includes(student.PRN) ? 1 : 0);
       });
 
@@ -258,7 +258,7 @@ export const getParticularData = async (req, res) => {
     res.status(500).send({ error: 'Internal Server Error' });
   }
 }
-
+*/
 
 export const updateAttendanceData = async (req, res) => {
   try {
@@ -318,7 +318,7 @@ export const updateAttendanceData = async (req, res) => {
 
 
 
-
+/*
 export const getAllAttendanceData = async (req, res) => {
   try {
     const { semester, branch, division, batch, subject } = req.query;
@@ -393,4 +393,178 @@ export const getAllAttendanceData = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+*/
 
+export const getAllAttendanceData = async (req, res) => {
+  try {
+    const { semester, branch, division, batch, subject } = req.query;
+
+    // Fetch all SEM_IDs from sem_info based on provided parameters
+    const semIdsQuery = await db('sem_info')
+      .select('SEM_ID')
+      .where({
+        SEMESTER: semester,
+        BRANCH: branch,
+        DIVISION: division,
+        SUBJECT_ID: subject
+      });
+
+    if (semIdsQuery.length === 0) {
+      return res.status(404).json({ message: 'No records found for the given parameters' });
+    }
+
+    const semIds = semIdsQuery.map(row => row.SEM_ID);
+
+    // Base query for attendance data
+    let attendanceQuery = db('attendance_table')
+      .select('DATE', 'Students', 'SEM_ID') // Include SEM_ID
+      .whereIn('SEM_ID', semIds)
+      .andWhere('DATE', '<=', db.raw('CURDATE()'))
+      .orderBy('DATE', 'desc');
+
+    // Modify the query based on whether batch is specified
+    if (batch) {
+      attendanceQuery = attendanceQuery.andWhere({ BATCH: batch });
+    }
+
+    const attendanceData = await attendanceQuery;
+
+    // Retrieve the list of students in the specified semester, branch, division, and optionally batch
+    const studentsQuery = db('student_info')
+      .select('PRN', 'NAME') // Adjust to match your student_info table columns
+      .where({ SEMESTER: semester, BRANCH: branch, DIVISION: division });
+
+    if (batch) {
+      studentsQuery.andWhere({ BATCH: batch });
+    }
+
+    const students = await studentsQuery;
+
+    if (students.length === 0) {
+      return res.status(404).json({ message: 'No students found for the specified criteria' });
+    }
+
+    if (attendanceData.length === 0) {
+      // When no attendance records are found but students are present
+      const response = {
+        attendance: [{
+          date: null,
+          semId: semIds[0], // Assuming there is at least one SEM_ID
+          students: students.map(student => ({
+            name: student.NAME,
+            prn: student.PRN,
+            attendance: 0 // Indicating no attendance records
+          }))
+        }]
+      };
+      return res.status(200).json(response);
+    }
+
+    // Prepare attendance data for each date
+    const formattedAttendanceData = attendanceData.map(record => {
+      const presentPRNs = record.Students.split(',');
+      return {
+        date: record.DATE, // Send the exact datetime value from the database
+        semId: record.SEM_ID, // Include SEM_ID in the response
+        students: students.map(student => ({
+          name: student.NAME,
+          prn: student.PRN,
+          attendance: presentPRNs.includes(student.PRN) ? 1 : 0
+        }))
+      };
+    });
+
+    // Send the formatted attendance data as a response
+    res.status(200).json({ attendance: formattedAttendanceData });
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getParticularData = async (req, res) => {
+  try {
+    const { sem, branch, batch, div, sub_id } = req.query; // Extract input parameters from the request query
+
+    console.log(sem, branch, batch, div, sub_id);
+
+    // Step 1: Retrieve the list of students based on the provided criteria
+    let studentsQuery = db('student_info')
+      .select('PRN', 'NAME')
+      .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div });
+
+    if (batch) {
+      // Filter by batch if provided
+      studentsQuery = studentsQuery.where({ BATCH: batch });
+    }
+
+    const students = await studentsQuery;
+
+    if (students.length === 0) {
+      return res.status(404).json({ message: 'No students found for the specified criteria' });
+    }
+
+    // Step 2: Retrieve the sem_id for the specified criteria
+    let infoTableQuery = db('sem_info')
+      .select('SEM_ID')
+      .where({ SEMESTER: sem, BRANCH: branch, DIVISION: div, SUBJECT_ID: sub_id });
+
+    if (batch) {
+      // If batch is provided, include it in the query
+      infoTableQuery = infoTableQuery.where({ BATCH: batch });
+    }
+
+    const infoTableResults = await infoTableQuery;
+
+    if (infoTableResults.length === 0) {
+      return res.status(404).json({ message: 'No sem_id found for the specified criteria' });
+    }
+
+    const semIds = infoTableResults.map(row => row.SEM_ID);
+
+    // Step 3: Retrieve attendance data based on the retrieved sem_id
+    const attendanceQuery = await db('attendance_table')
+      .select('DATE', 'STUDENTS', 'SEM_ID') // Select only available columns
+      .whereIn('SEM_ID', semIds)
+      .andWhere('DATE', '<=', db.fn.now())
+      .orderBy('DATE', 'desc');
+
+    if (attendanceQuery.length === 0) {
+      // If no attendance data is found, return students with null dates and lectures
+      const attendanceData = students.map(student => ({
+        prn: student.PRN,
+        name: student.NAME,
+        lectures: null,
+        dates: null
+      }));
+
+      return res.status(200).json({ attendanceData });
+    }
+
+    // Step 4: Correlate attendance data with the list of students
+    const attendanceData = students.map(student => {
+      const lectures = [];
+      const dates = [];
+
+      attendanceQuery.forEach(record => {
+        dates.push(record.DATE); // No formatting as per your request
+        lectures.push(record.STUDENTS.includes(student.PRN) ? 1 : 0);
+      });
+
+      // If no lectures or dates were added, set them to null
+      return {
+        prn: student.PRN,
+        name: student.NAME,
+        lectures: lectures.length ? lectures : null,
+        dates: dates.length ? dates : null
+      };
+    });
+
+    // Step 5: Send the response back to the client
+    res.status(200).json({ attendanceData });
+
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    res.status(500).send({ error: 'Internal Server Error' });
+  }
+}

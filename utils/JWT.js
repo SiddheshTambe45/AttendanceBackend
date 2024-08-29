@@ -1,6 +1,5 @@
 
 
-import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken';
 
 // Function to generate access and refresh tokens

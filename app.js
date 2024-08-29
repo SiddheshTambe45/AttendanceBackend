@@ -5,6 +5,7 @@ import facultyRouter from './routes/faculty.js';
 import hodRouter from './routes/hod.js';
 import principalRouter from './routes/principal.js';
 import authenticationRouter from './routes/authentication.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use('/faculty',facultyRouter);
 app.use('/hod',hodRouter);
 app.use('/principal',principalRouter);
 app.use('/authenticate',authenticationRouter)
+app.use('/admin',adminRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

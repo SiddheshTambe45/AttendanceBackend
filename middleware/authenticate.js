@@ -49,6 +49,11 @@ export const verifyJWT = async (req, res, next) => {
         return next(); // Proceed with the new access token
 
       } catch (refreshError) {
+         // Refresh token verification failed, delete tokens and user data
+         res.clearCookie('accessToken');
+         res.clearCookie('authRefreshToken');
+         res.clearCookie('userData');
+         
         console.error('Refresh token verification failed:', refreshError.message);
         return res.status(401).send("Invalid or expired refresh token");
       }
