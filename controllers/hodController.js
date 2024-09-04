@@ -539,7 +539,7 @@ export const getCriteriaFacSub = async (req, res) => {
       divisions,
       batches
     };
-
+    console.log(responseData)
     // Send response
     res.status(200).json(responseData);
 

@@ -264,6 +264,8 @@ export const updateAttendanceData = async (req, res) => {
   try {
     const { semester, branch, division, subject, faculty_id, attendance } = req.body;
 
+    console.log( req.body )
+
     await db.transaction(async (trx) => {
       for (const record of attendance) {
         // Use the date directly as provided, assuming it is in the correct format and timezone
