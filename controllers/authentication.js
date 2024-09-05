@@ -10,6 +10,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const departmentMapping = {
+  'CE': 'Computer Engineering',
+  'IT': 'Information Technology',
+  'AIDS': 'Artificial Intelligence & Data Science',
+  'AIML': 'Artificial Intelligence & Machine Learning',
+  'IOT': 'Computer Science & Engineering (IOT & Cybersecurity Including Blockchain Technology)',
+  'EXTC': 'Electronics & Telecommunication Engineering',
+  'ECS': 'Electronics & Computer Science',
+  'MECH': 'Mechanical Engineering'
+};
+
+
 
 // Refresh Tokens
 export const refreshTokens = async (req, res) => {
@@ -103,6 +115,12 @@ export const signUpHOD = async (req, res) => {
 
   if (hodPassword.length < 6) {
     return res.status(400).json({ message: 'HOD password must be at least 6 characters long' });
+  }
+
+  const validHod = await db('department').select('HOD_ID').where({ HOD_ID: facultyId }).first();
+
+  if (!validHod) {
+    return res.status(401).json({ message: 'Invalid HOD sign-in' });
   }
 
   try {
@@ -267,6 +285,7 @@ export const addFaculty = async (req, res) => {
       FACULTY_ID: facultyId,
       FACULTY_NAME: facultyName,
       DEPARTMENT: department,
+      DEPARTMENT_NAME: departmentMapping[department],
       PASSWORD: hashedPassword,
       EMAIL: email
     });
