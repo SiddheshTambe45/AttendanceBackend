@@ -13,7 +13,7 @@ app.use(cookieParser()); // Use cookie-parser middleware
 
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'https://attendance-liard-seven.vercel.app/']
+    origin: ['http://localhost:3000', 'https://attendance-liard-seven.vercel.app']
 }
 app.use(cors(corsOptions));
 
