@@ -1,14 +1,23 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import knex from 'knex';
+
+// const config = {
+//   client: 'mysql2',
+//   connection: {
+//     host: 'localhost',
+//     user: 'mysqlUser', //newuser //new_user
+//     password: 'secure_password', //newpassword //new_password
+//     database: 'attendance',  //newdatabase //college 
+//     timezone: 'Z' //utc
+//   }
+// };
+
 
 const config = {
   client: 'mysql2',
-  connection: {
-    host: 'localhost',
-    user: 'mysqlUser', //newuser //new_user
-    password: 'secure_password', //newpassword //new_password
-    database: 'attendance',  //newdatabase //college 
-    timezone: 'Z' //utc
-  }
+  connection: process.env.DB_CONNECTION,
+  timezone: 'UTC' // This is a good practice to set the timezone for MySQL connections
 };
 
 // const config = {

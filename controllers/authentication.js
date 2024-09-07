@@ -4,11 +4,12 @@ import db from '../db/knexfile.js';
 import bcrypt from 'bcryptjs'; // Use bcryptjs instead of bcrypt
 import { generateTokens, verifyRefreshToken } from '../utils/JWT.js';
 import { fileURLToPath } from 'url';
-
+import cloudinary from '../cloudinary/cloudinary.js'; // Adjust the path as needed
 
 // Manually define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 const departmentMapping = {
   'CE': 'Computer Engineering',
@@ -52,47 +53,6 @@ export const refreshTokens = async (req, res) => {
   }
 };
 
-// Add Faculty
-/*
-export const addFaculty = async (req, res) => {
-  const { facultyId, facultyName, department, password, email } = req.body;
-
-  if (!facultyId || !facultyName || !department || !password || !email) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
-  }
-
-  try {
-    const existingFaculty = await db('faculty')
-      .where({ FACULTY_ID: facultyId })
-      .orWhere({ EMAIL: email })
-      .first();
-
-    if (existingFaculty) {
-      return res.status(400).json({ message: 'Faculty ID or email already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await db('faculty').insert({
-      FACULTY_ID: facultyId,
-      FACULTY_NAME: facultyName,
-      DEPARTMENT: department,
-      PASSWORD: hashedPassword,
-      EMAIL: email
-    });
-
-    res.status(201).json({ message: 'Faculty member successfully signed up' });
-  } catch (error) {
-    console.error('Error adding faculty:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-*/
-
 // Fetch Departments
 export const getDepartments = async (req, res) => {
   try {
@@ -104,7 +64,9 @@ export const getDepartments = async (req, res) => {
   }
 };
 
+
 // Sign Up HOD
+/*
 export const signUpHOD = async (req, res) => {
   const { hodEmail, facultyEmail, facultyPassword, facultyId, department, hodPassword } = req.body;
   // console.log(hodEmail, facultyEmail, facultyPassword, facultyId, department, hodPassword);
@@ -152,6 +114,8 @@ export const signUpHOD = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+*/
+
 
 // Login
 export const login = async (req, res) => {
@@ -255,6 +219,8 @@ export const login = async (req, res) => {
 };
 
 
+
+/*
 export const addFaculty = async (req, res) => {
   const { facultyId, facultyName, department, password, email } = req.body;
 
@@ -310,3 +276,149 @@ export const addFaculty = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+*/
+
+// Function to create a text file with faculty details
+const createFacultyDetailsFile = (facultyId, facultyName, department) => {
+  const content = `Faculty ID: ${facultyId}\nFaculty Name: ${facultyName}\nDepartment: ${department}`;
+  const filePath = path.join(__dirname, `${facultyId}.txt`);
+
+  fs.writeFileSync(filePath, content);
+  return filePath;
+};
+
+// Function to create a text file with HOD details
+const createHodDetailsFile = (facultyId, hodEmail, department) => {
+  const content = `HOD ID: ${facultyId}\nHOD Email: ${hodEmail}\nDepartment: ${department}`;
+  const filePath = path.join(__dirname, `${facultyId}_HOD.txt`);
+
+  fs.writeFileSync(filePath, content);
+  return filePath;
+};
+
+// Sign Up HOD
+export const signUpHOD = async (req, res) => {
+  const { hodEmail, facultyEmail, facultyPassword, facultyId, department, hodPassword } = req.body;
+
+  if (!hodEmail || !facultyEmail || !facultyPassword || !facultyId || !department || !hodPassword) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  if (hodPassword.length < 6) {
+    return res.status(400).json({ message: 'HOD password must be at least 6 characters long' });
+  }
+
+  const validHod = await db('department').select('HOD_ID').where({ HOD_ID: facultyId }).first();
+
+  if (!validHod) {
+    return res.status(401).json({ message: 'Invalid HOD sign-in' });
+  }
+
+  try {
+    // Verify Faculty
+    const faculty = await db('faculty').where({ EMAIL: facultyEmail }).first();
+
+    if (!faculty) {
+      return res.status(404).json({ message: 'Faculty not found' });
+    }
+
+    const isFacultyPasswordValid = await bcrypt.compare(facultyPassword, faculty.PASSWORD);
+
+    if (!isFacultyPasswordValid || faculty.FACULTY_ID !== facultyId || faculty.DEPARTMENT !== department) {
+      return res.status(401).json({ message: 'Invalid faculty credentials or mismatched information' });
+    }
+
+    // Add HOD
+    const hashedHodPassword = await bcrypt.hash(hodPassword, 10);
+
+    await db('department').where({ BRANCH: department }).update({
+      HOD_ID: facultyId,
+      EMAIL: hodEmail,
+      PASSWORD: hashedHodPassword
+    });
+
+    // Create a text file with HOD details
+    const filePath = createHodDetailsFile(facultyId, hodEmail, department);
+
+    // Create unique folder for HOD in Cloudinary by uploading the text file
+    const hodFolder = `hodFolder/${facultyId}`;
+    await cloudinary.v2.uploader.upload(filePath, {
+      folder: hodFolder,
+      resource_type: 'raw',
+      public_id: 'hod_details'
+    });
+
+    // Clean up the local file after upload
+    fs.unlinkSync(filePath);
+
+    res.status(200).json({ message: 'HOD successfully signed up and assigned' });
+  } catch (error) {
+    console.error('Error signing up HOD:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+// Add Faculty
+export const addFaculty = async (req, res) => {
+  const { facultyId, facultyName, department, password, email } = req.body;
+
+  if (!facultyId || !facultyName || !department || !password || !email) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+  }
+
+  const transaction = await db.transaction();
+
+  try {
+    const existingFaculty = await transaction('faculty')
+      .where({ FACULTY_ID: facultyId })
+      .orWhere({ EMAIL: email })
+      .first();
+
+    if (existingFaculty) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Faculty ID or email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await transaction('faculty').insert({
+      FACULTY_ID: facultyId,
+      FACULTY_NAME: facultyName,
+      DEPARTMENT: department,
+      DEPARTMENT_NAME: departmentMapping[department],
+      PASSWORD: hashedPassword,
+      EMAIL: email
+    });
+
+    // Create a text file with faculty details
+    const filePath = createFacultyDetailsFile(facultyId, facultyName, department);
+
+    // Create unique folder for Faculty in Cloudinary by uploading the text file
+    const facultyFolder = `facultyFolder/${facultyId}`;
+    await cloudinary.v2.uploader.upload(filePath, {
+      folder: facultyFolder,
+      resource_type: 'raw',
+      public_id: 'faculty_details'
+    });
+
+    // Clean up the local file after upload
+    fs.unlinkSync(filePath);
+
+    await transaction.commit();
+
+    res.status(201).json({ message: 'Faculty member successfully signed up' });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error adding faculty:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+

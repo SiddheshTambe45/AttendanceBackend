@@ -1,7 +1,11 @@
 import dotenv from 'dotenv';
+
+// Ensure this is the correct relative path to your .env file
+dotenv.config({ path: './.env' }); 
+
+
 import app from './app.js';
 
-dotenv.config({path:'./.env'});
 
 
 app.listen(process.env.PORT,()=>{
