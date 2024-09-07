@@ -44,7 +44,7 @@ export const verifyJWT = async (req, res, next) => {
         console.log("new token generated")
 
         // Set new access token in cookies
-        res.cookie('accessToken', tokens.accessToken, { secure: true, httpOnly: true });
+        res.cookie('accessToken', tokens.accessToken, { secure: true, httpOnly: true, maxAge: 3600000 });
 
         return next(); // Proceed with the new access token
 
