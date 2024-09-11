@@ -162,7 +162,7 @@ export const login = async (req, res) => {
         facultyId: faculty.FACULTY_ID,
         role: 'HOD',
         department: department.BRANCH
-      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
+      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None' }); // 7 days
 
       res.status(200).json({
         message: 'Login successful',
@@ -198,7 +198,7 @@ export const login = async (req, res) => {
         facultyId: faculty.FACULTY_ID,
         role: 'Faculty',
         department: faculty ? faculty.DEPARTMENT : null
-      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
+      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None' }); // 7 days
 
       // Fetch department information for Faculty
       // const department = await db('department').where({ BRANCH: faculty.DEPARTMENT }).first();
