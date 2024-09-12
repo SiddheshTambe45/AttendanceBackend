@@ -19,7 +19,8 @@ const departmentMapping = {
   'IOT': 'Computer Science & Engineering (IOT & Cybersecurity Including Blockchain Technology)',
   'EXTC': 'Electronics & Telecommunication Engineering',
   'ECS': 'Electronics & Computer Science',
-  'MECH': 'Mechanical Engineering'
+  'MECH': 'Mechanical Engineering',
+  'FIRST_YEAR': 'FIRST_YEAR'
 };
 
 
@@ -154,8 +155,8 @@ export const login = async (req, res) => {
 
       await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
 
-      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000 });
-      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None' });
+      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None' });
 
       // Set user data cookie
       res.cookie("userData", JSON.stringify({
@@ -190,8 +191,8 @@ export const login = async (req, res) => {
 
       await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
 
-      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000 });
-      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000  });
+      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None' });
+      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None'  });
 
       // Set user data cookie
       res.cookie("userData", JSON.stringify({
