@@ -20,11 +20,14 @@ const corsOptions = {
         'Authorization', 
         'X-Requested-With', 
         'X-CSRF-Token',
-        'Access-Control-Allow-Credentials', // Cookies related header
-        'Access-Control-Allow-Headers'
+        // 'Access-Control-Allow-Credentials', // Cookies related header
+        // 'Access-Control-Allow-Headers'
     ] // Allowed headers
 }
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use('/faculty',facultyRouter);
 app.use('/hod',hodRouter);
