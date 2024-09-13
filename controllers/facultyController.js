@@ -1,5 +1,5 @@
 import db from '../db/knexfile.js';
-
+import { DateTime } from 'luxon';
 
 
 export const getFacultyTeachingData = async (req, res) => {
@@ -260,6 +260,7 @@ export const getParticularData = async (req, res) => {
 }
 */
 
+/*
 export const updateAttendanceData = async (req, res) => {
   try {
     const { semester, branch, division, subject, faculty_id, attendance } = req.body;
@@ -267,6 +268,7 @@ export const updateAttendanceData = async (req, res) => {
     console.log( req.body )
 
     await db.transaction(async (trx) => {
+      let a=0;
       for (const record of attendance) {
         // Use the date directly as provided, assuming it is in the correct format and timezone
         const date = new Date(record.date);
@@ -303,11 +305,76 @@ export const updateAttendanceData = async (req, res) => {
           .filter(student => student.attendance === 1)
           .map(student => student.prn);
 
+        console.log(a);
+
         await trx.raw(`
           INSERT INTO attendance_table (SEM_ID, DATE, Students)
           VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE Students = VALUES(Students)
         `, [semId, formattedDate, presentPRNs.join(',')]);
+
+        a++;
+      }
+    });
+
+    res.status(200).json({ message: 'Attendance records updated successfully' });
+  } catch (error) {
+    console.error('Error updating attendance data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+*/
+
+export const updateAttendanceData = async (req, res) => {
+  try {
+    const { semester, branch, division, subject, faculty_id, attendance } = req.body;
+
+    console.log(req.body);
+
+    await db.transaction(async (trx) => {
+      for (const record of attendance) {
+        // Convert the date string to a Luxon DateTime object
+        const date = DateTime.fromISO(record.date);
+
+        // Format date to 'YYYY-MM-DD HH:MM:SS'
+        const formattedDate = date.toFormat('yyyy-MM-dd HH:mm:ss');
+
+        console.log('Formatted Date:', formattedDate);
+
+        // Fetch SEM_ID based on given criteria
+        const semInfoQuery = await trx('sem_info')
+          .select('SEM_ID')
+          .where({
+            SEMESTER: semester,
+            BRANCH: branch,
+            DIVISION: division,
+            SUBJECT_ID: subject,
+            FACULTY_ID: faculty_id
+          })
+          .first();
+
+        if (!semInfoQuery) {
+          return res.status(404).json({ message: `SEM_ID not found for the given criteria` });
+        }
+
+        const semId = semInfoQuery.SEM_ID;
+
+        // Filter students who are present
+        const presentPRNs = record.students
+          .filter(student => student.attendance === 1)
+          .map(student => student.prn);
+
+        // Insert or update attendance records using Knex query builder
+        await trx('attendance_table')
+          .insert({
+            SEM_ID: semId,
+            DATE: formattedDate,
+            STUDENTS: presentPRNs.join(',')
+          })
+          .onConflict(['SEM_ID', 'DATE'])
+          .merge({
+            STUDENTS: trx.raw('VALUES(STUDENTS)')
+          });
       }
     });
 

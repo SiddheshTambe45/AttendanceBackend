@@ -13,7 +13,16 @@ app.use(cookieParser()); // Use cookie-parser middleware
 
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'https://attendance-liard-seven.vercel.app', 'https://neon-cendol-8167b6.netlify.app', 'https://attendance-15bl.onrender.com']
+    origin: ['http://localhost:3000', 'https://attendance-liard-seven.vercel.app', 'https://neon-cendol-8167b6.netlify.app', 'https://attendance-15bl.onrender.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'X-Requested-With', 
+        'X-CSRF-Token',
+        'Access-Control-Allow-Credentials', // Cookies related header
+        'Access-Control-Allow-Headers'
+    ] // Allowed headers
 }
 app.use(cors(corsOptions));
 
