@@ -204,7 +204,7 @@ export const login = async (req, res) => {
         facultyId: faculty.FACULTY_ID,
         role: 'Faculty',
         department: faculty ? faculty.DEPARTMENT : null
-      }), { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', path:'/'
+      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', path:'/'
       }); // 7 days
 
       // Fetch department information for Faculty
