@@ -194,9 +194,9 @@ export const login = async (req, res) => {
 
       await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
 
-      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None',   domain: 'attendance-liard-seven.vercel.app'  // Set domain for cross-subdomain usage
+      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None',    // Set domain for cross-subdomain usage
       });
-      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',  domain: 'attendance-liard-seven.vercel.app'  // Set domain for cross-subdomain usage
+      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',    // Set domain for cross-subdomain usage
       });
 
       // // Set user data cookie
