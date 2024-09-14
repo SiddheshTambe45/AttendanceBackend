@@ -165,7 +165,7 @@ export const login = async (req, res) => {
         facultyId: faculty.FACULTY_ID,
         role: 'HOD',
         department: department.BRANCH
-      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', path:'/'
+      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', path:'/', domain: 'attendance-liard-seven.vercel.app', // This should match the frontend domain
       }); // 7 days
 
       res.status(200).json({
