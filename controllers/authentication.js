@@ -155,9 +155,9 @@ export const login = async (req, res) => {
 
       await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
 
-      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None',   domain: '.vercel.app'  // Set domain for cross-subdomain usage
+      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None',   // Set domain for cross-subdomain usage
       });
-      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',  domain: '.vercel.app'  // Set domain for cross-subdomain usage
+      res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',   // Set domain for cross-subdomain usage
       });
 
       // Set user data cookie
@@ -165,7 +165,7 @@ export const login = async (req, res) => {
         facultyId: faculty.FACULTY_ID,
         role: 'HOD',
         department: department.BRANCH
-      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',  domain: '.vercel.app'  // Set domain for cross-subdomain usage
+      }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', domain: 'attendance-liard-seven.vercel.app', path:'/'  // Set domain for cross-subdomain usage
       }); // 7 days
 
       res.status(200).json({
@@ -199,13 +199,13 @@ export const login = async (req, res) => {
       res.cookie("authRefreshToken", tokens.refreshToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',    // Set domain for cross-subdomain usage
       });
 
-      // // Set user data cookie
-      // res.cookie("userData", JSON.stringify({
-      //   facultyId: faculty.FACULTY_ID,
-      //   role: 'Faculty',
-      //   department: faculty ? faculty.DEPARTMENT : null
-      // }), { httpOnly: false, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None',  domain: 'attendance-liard-seven.vercel.app'  // Set domain for cross-subdomain usage
-      // }); // 7 days
+      // Set user data cookie
+      res.cookie("userData", JSON.stringify({
+        facultyId: faculty.FACULTY_ID,
+        role: 'Faculty',
+        department: faculty ? faculty.DEPARTMENT : null
+      }), { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'None', domain: 'attendance-liard-seven.vercel.app', path:'/' 
+      }); // 7 days
 
       // Fetch department information for Faculty
       // const department = await db('department').where({ BRANCH: faculty.DEPARTMENT }).first();
