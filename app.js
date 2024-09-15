@@ -20,6 +20,8 @@ const corsOptions = {
         'Authorization', 
         'X-Requested-With', 
         'X-CSRF-Token',
+        'X-Refresh-Token', // Allows custom header for refresh token
+        'x-access-token' // Allows custom header for access token
         // 'Access-Control-Allow-Credentials', // Cookies related header
         // 'Access-Control-Allow-Headers'
     ] // Allowed headers

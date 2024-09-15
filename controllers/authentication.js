@@ -119,6 +119,7 @@ export const signUpHOD = async (req, res) => {
 
 
 // Login
+/*
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -216,6 +217,95 @@ export const login = async (req, res) => {
         // role: 'Faculty',
         // accessToken: tokens.accessToken,
         // department: department ? department.BRANCH : null
+      });
+    }
+
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+*/
+
+// Login
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
+  try {
+    // Determine if the email is for HOD or Faculty
+    const isHod = email.startsWith('hod');
+
+    if (isHod) {
+      // Validate HOD
+      const department = await db('department').where({ EMAIL: email }).first();
+
+      if (!department) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, department.PASSWORD);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      // Fetch faculty information for HOD
+      const faculty = await db('faculty').where({ FACULTY_ID: department.HOD_ID }).first();
+
+      if (!faculty) {
+        return res.status(401).json({ message: 'Invalid HOD credentials or not assigned as HOD' });
+      }
+
+      const tokens = generateTokens(faculty.FACULTY_ID);
+
+      // Store refresh token in the database
+      await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
+
+      // Send tokens and user data in the response
+      res.status(200).json({
+        message: 'Login successful',
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        userData: {
+          facultyId: faculty.FACULTY_ID,
+          role: 'HOD',
+          department: department.BRANCH
+        }
+      });
+
+    } else {
+      // Validate Faculty
+      const faculty = await db('faculty').where({ EMAIL: email }).first();
+
+      if (!faculty) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, faculty.PASSWORD);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      const tokens = generateTokens(faculty.FACULTY_ID);
+
+      // Store refresh token in the database
+      await db('faculty').where({ FACULTY_ID: faculty.FACULTY_ID }).update({ REFRESH_TOKEN: tokens.refreshToken });
+
+      // Send tokens and user data in the response
+      res.status(200).json({
+        message: 'Login successful',
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        userData: {
+          facultyId: faculty.FACULTY_ID,
+          role: 'Faculty',
+          department: faculty.DEPARTMENT
+        }
       });
     }
 
